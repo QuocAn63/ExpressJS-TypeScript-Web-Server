@@ -1,7 +1,17 @@
-import express, { Router } from "express";
-import oauth from "./oauth";
-const AppRouter: Router = express.Router();
+import express, { Express, Router } from "express";
+import authenticateRoute from "./authenticate";
+import todoRoute from "./todo";
+import homeRoute from "./home";
+const apiRouter: Router = express.Router();
 
-AppRouter.use("/auth", oauth);
+const appRouter = (app: Express) => {
+  apiRouter.use("/auth", authenticateRoute);
 
-export default AppRouter;
+  // api routes
+  app.use("/api", apiRouter);
+  // view routes
+  app.use("/todo", todoRoute);
+  app.use("/", homeRoute);
+};
+
+export default appRouter;

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/styles/style.css" rel="stylesheet" />
+    <link href="/styles/global.css" rel="stylesheet" />
+    <title>Document</title>
+  </head>
+  <body>
+    <% var authMode %>
+    <div class="layout-wrapper">
+      <%- include("../layouts/header") %>
+      <div class="content-container max-w-screen-md">
+        <% if(user) {%>
+          <span><%= user.name %></span>  
+        <%} else {%>
+        <div class="flex justify-center">
+            <div
+              class="px-8 py-14 border border-gray-300 rounded shadow-lg w-[50%] bg-white"
+            >
+          <% if(authMode == 'login' && user == null || (authMode == null && user == null)) {%>
+            <div class="pb-3">
+              <input
+                type="text"
+                name="username"
+                class="border border-gray-200 rounded px-3 py-2 outline-none w-full"
+                placeholder="Username"
+              />
+            </div>
+            <div class="pb-3">
+              <input
+                type="password"
+                name="password"
+                class="border border-gray-200 rounded px-3 py-2 outline-none w-full"
+                placeholder="Password"
+              />
+            </div>
+            <span
+              >Don't have an account? <a href="/todo/register" class="text-blue-600">Sign up</a></span
+            >
+            <button
+              class="uppercase bg-green-500 text-white font-semibold text-xl rounded w-full py-2 mt-5"
+            >
+              Login
+            </button>
+          <%} else if(authMode == 'register') {%>
+            <div class="pb-3">
+              <input
+                type="text"
+                name="username"
+                class="border border-gray-200 rounded px-3 py-2 outline-none w-full"
+                placeholder="Username"
+              />
+            </div>
+
+            <div class="pb-3">
+              <input
+                type="password"
+                name="password"
+                class="border border-gray-200 rounded px-3 py-2 outline-none w-full"
+                placeholder="Password"
+              />
+            </div>
+            <div class="pb-3">
+              <input
+                type="password"
+                name="passwordconfirm"
+                class="border border-gray-200 rounded px-3 py-2 outline-none w-full"
+                placeholder="Confirm password"
+              />
+            </div>
+            <span>Have an account? <a href="/todo/login" class="text-blue-600">Login here</a></span>
+            <button
+              class="uppercase bg-green-500 text-white font-semibold text-xl rounded w-full py-2 mt-5"
+            >
+              Register
+            </button>
+          <%} %>
+          <p class="text-center text-sm text-gray-400 py-6">Hoặc</p>
+          <div class="flex flex-col gap-3">
+            <a href="/" class="bg-[#4267B2] text-white font-semibold py-2 px-3 rounded border border-[#4267B2]">Continue with Facebook</a>
+            <a href="/api/auth/login/google" class="bg-white text-slate-500 font-semibold py-2 px-3 rounded border border-gray-200">Continue with Google</a>
+            <a href="/" class="bg-black text-white font-semibold py-2 px-3 rounded border border-black">Continue with Github</a>
+          </div>
+        </div>
+        </div>
+        <%} %>
+      </div>
+      <%- include("../layouts/footer") %>
+    </div>
+  </body>
+</html>
