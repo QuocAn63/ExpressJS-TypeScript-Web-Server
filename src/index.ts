@@ -5,7 +5,6 @@ import morgan from "morgan";
 import appRouter from "./router/index";
 import chalk from "chalk";
 import dbConnector from "./util/database/dbConnector";
-import ejs from "ejs";
 import path from "path";
 
 require("dotenv").config();
@@ -29,7 +28,7 @@ dbConnector();
 
 app.listen(port, () => {
   console.log(
-    chalk.greenBright(
+    chalk.bgMagentaBright(
       `[SERVER] Running and listening at http://localhost:${port}`
     )
   );
