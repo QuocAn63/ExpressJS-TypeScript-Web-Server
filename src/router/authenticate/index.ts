@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  changePassword,
   handleFacebookLoginCallback,
   handleFacebookLoginRequest,
   handleGithubLoginCallback,
@@ -11,6 +12,7 @@ import {
   register,
 } from "../../controllers/authenticate";
 import { checkToken } from "../../middlewares/checkToken";
+import { validationChains } from "../../validations/authenticate.validation";
 
 const router = express.Router();
 
@@ -21,8 +23,22 @@ router.get("/facebook/callback", handleFacebookLoginCallback, login);
 router.get("/login/google", handleGoogleLoginRequest);
 router.get("/login/github", handleGithubLoginRequest);
 router.get("/login/facebook", handleFacebookLoginRequest);
-router.post("/login", login);
+router.post(
+  "/login",
+  validationChains.authenticate("username", "password"),
+  login
+);
 
-router.post("/register", register);
+router.post(
+  "/register",
+  validationChains.authenticate("username", "password", "passwordconfirm"),
+  register
+);
+router.put(
+  "/changepw",
+  validationChains.authenticate("password", "passwordconfirm", "newpassword"),
+  checkToken,
+  changePassword
+);
 router.post("/token", checkToken, regenerateToken);
 export default router;

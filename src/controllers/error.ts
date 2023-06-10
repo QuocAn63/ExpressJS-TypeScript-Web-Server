@@ -9,6 +9,7 @@ export const errorHandler: ErrorRequestHandler = (
 ) => {
   const message = err.message;
   const status = err.status | 400;
+  const detail = err.detail;
 
-  return res.status(status).json({ error: message, detail: {} });
+  return res.status(status).json({ error: message, detail });
 };

@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { IResponseData } from "../types/response";
 import axios from "axios";
+import { validationResult } from "express-validator";
 
 const githubAuthorizeUrl = "https://github.com/login/oauth/authorize";
 export const oauth2Client = new google.auth.OAuth2(
@@ -27,6 +28,19 @@ interface IRequestWithOauthCallback extends Request {
   loginMethod: "google" | "github" | "facebook";
   user: string;
 }
+
+const myValidationResult = validationResult.withDefaults({
+  formatter: (error) => {
+    switch (error.type) {
+      case "field":
+        return { path: error.path, msg: error.msg };
+      case "unknown_fields":
+        return { unknowField: error.fields, msg: error.msg };
+      default:
+        return error;
+    }
+  },
+});
 
 const findOrCreateUser = async (
   method: "google" | "github" | "facebook",
@@ -74,6 +88,12 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
+    const result = myValidationResult(req).array({ onlyFirstError: true });
+
+    if (result.length !== 0) {
+      throw { message: "Validation error", status: 401, detail: result };
+    }
+
     // temporary fix
     let reqWithOauthCallback = req as IRequestWithOauthCallback;
     let userId: string;
@@ -119,13 +139,18 @@ export const register = async (
   next: NextFunction
 ) => {
   try {
+    const result = myValidationResult(req).array({ onlyFirstError: true });
+
+    if (result.length !== 0) {
+      throw { message: "Validation error", status: 401, detail: result };
+    }
+
     const { username, password, repassword } = req.body;
-    const saltRounds = 10;
 
     if (password !== repassword)
       throw { message: "Password confirm not match" };
 
-    const encryptedPassword = await bcrypt.hash(password, saltRounds);
+    const encryptedPassword = await bcrypt.hash(password, 10);
 
     const userCreationResponse = await userModel.create({
       username,
@@ -289,6 +314,49 @@ export const handleFacebookLoginCallback = async (
   try {
     const data = req.query;
     return res.json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const changePassword = async (
+  req: Request,
+  res: Response<IResponseData>,
+  next: NextFunction
+) => {
+  try {
+    const result = myValidationResult(req).array({ onlyFirstError: true });
+
+    if (result.length !== 0) {
+      throw { message: "Validation error", status: 401, detail: result };
+    }
+    const { password, newpassword } = req.body;
+    const userId = res.locals.user;
+
+    const userResponse = await userModel.findById(userId);
+
+    if (userResponse === null) {
+      throw { message: "Can not find user", status: 401 };
+    }
+
+    const isCorrectPw = await bcrypt.compare(password, userResponse.password);
+
+    if (!isCorrectPw) {
+      throw { message: "Password not match", status: 401 };
+    }
+
+    const newPasswordEncrypted = await bcrypt.hash(newpassword, 10);
+    const updateUserResult = await userModel.findByIdAndUpdate(userId, {
+      password: newPasswordEncrypted,
+    });
+
+    if (!updateUserResult) {
+      throw { message: "Update password failed", status: 400 };
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Password updated", data: updateUserResult.id });
   } catch (err) {
     next(err);
   }
