@@ -2,7 +2,7 @@ import express, { Express, Router } from "express";
 import authenticateRoute from "./authenticate";
 import todoRoute from "./todo";
 import homeRoute from "./home";
-import { errorHandler } from "./error";
+import { errorHandler } from "../controllers/error";
 const apiRouter: Router = express.Router();
 
 const appRouter = (app: Express) => {

@@ -1,5 +1,6 @@
 export interface IResponseData {
-  error?: boolean;
-  message: string;
+  error?: string;
+  detail?: object;
+  message?: string;
   data?: any;
 }

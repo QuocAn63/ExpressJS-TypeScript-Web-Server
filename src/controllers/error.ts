@@ -10,5 +10,5 @@ export const errorHandler: ErrorRequestHandler = (
   const message = err.message;
   const status = err.status | 400;
 
-  return res.status(status).json({ message });
+  return res.status(status).json({ error: message, detail: {} });
 };
