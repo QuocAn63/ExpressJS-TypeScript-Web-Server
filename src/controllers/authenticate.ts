@@ -106,7 +106,7 @@ export const login = async (
 
       const userResponse = await userModel.findOne({ username });
 
-      if (userResponse === null)
+      if (userResponse === null || userResponse.password === undefined)
         throw { message: "User not found", status: 404 };
 
       const isPasswordValid = await bcrypt.compare(
@@ -335,7 +335,7 @@ export const changePassword = async (
 
     const userResponse = await userModel.findById(userId);
 
-    if (userResponse === null) {
+    if (userResponse === null || userResponse.password === undefined) {
       throw { message: "Can not find user", status: 401 };
     }
 

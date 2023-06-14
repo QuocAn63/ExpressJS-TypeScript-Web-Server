@@ -8,11 +8,35 @@ export const getAllUsers = async (
   next: NextFunction
 ) => {
   try {
-    const queries = req.query;
+    const queryParams = req.query;
+    const query = userModel.find();
+    const { username, name, date, limit } = queryParams;
 
-    const usersResponse = await userModel.find();
+    if (username && typeof username === "string") {
+      query.byUserName(username);
+    }
 
-    return res.status(200).json({ data: usersResponse });
+    if (name && typeof name === "string") {
+      query.byName(name);
+    }
+
+    if (date && typeof date === "string") {
+      switch (date) {
+        case "desc":
+          query.sort({ createdAt: -1 });
+          break;
+        case "asc":
+          query.sort({ createdAt: 1 });
+      }
+    }
+
+    query.limit(
+      limit && typeof limit === "string" ? Number.parseInt(limit) : 20
+    );
+
+    const userResponse = await query.exec();
+
+    return res.status(200).json({ data: userResponse });
   } catch (err) {
     next(err);
   }

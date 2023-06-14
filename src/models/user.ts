@@ -1,15 +1,6 @@
 import { Schema, model } from "mongoose";
 
-export interface IUser {
-  username: string;
-  password: string;
-  googleId: string;
-  facebookId: string;
-  githubId: string;
-  name: string;
-}
-
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema(
   {
     username: {
       type: String,
@@ -32,9 +23,19 @@ const userSchema = new Schema<IUser>(
       type: String,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    query: {
+      byUserName(name: string) {
+        return this.find({ username: { $regex: name } });
+      },
+      byName(name: string) {
+        return this.find({ name: { $regex: name } });
+      },
+    },
+  }
 );
 
-const userModel = model<IUser>("user", userSchema);
+const userModel = model("user", userSchema);
 
 export default userModel;
