@@ -6,6 +6,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { IResponseData } from "../types/response";
 import axios from "axios";
 import { validationResult } from "express-validator";
+import { RequestWithUser } from "../types/request";
 
 const githubAuthorizeUrl = "https://github.com/login/oauth/authorize";
 export const oauth2Client = new google.auth.OAuth2(
@@ -361,3 +362,68 @@ export const changePassword = async (
     next(err);
   }
 };
+
+export class AuthController {
+  public githubAuthUrl = "https://github.com/login/oauth/authorize";
+  public googleOauth2Client = new google.auth.OAuth2(
+    "743433801669-j169dda6jeac7uu97a1rgrpqev40jmhm.apps.googleusercontent.com",
+    "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",
+    "http://localhost:3001/api/auth/google/callback"
+  );
+  public googleProfileApiScope =
+    "https://www.googleapis.com/auth/userinfo.profile";
+
+  public async login(
+    req: Request,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) {}
+
+  public async register(
+    req: Request,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) {}
+
+  public async logout(
+    req: Request,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) {}
+
+  public async requestLoginWithGoogle(req: Request, res: Response) {
+    const googleProfileApiScope = this.googleProfileApiScope;
+
+    const authorizationUrl = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      googleProfileApiScope,
+      include_granted_scopes: true,
+    });
+
+    res.status(301).redirect(authorizationUrl);
+  }
+
+  public async handleGoogleCallback(req: RequestWithUser, res: Response) {
+    let q = req.query;
+
+    if (q.error) throw { message: q.error };
+
+    let { tokens } = await this.googleOauth2Client.getToken(q.code as string);
+    this.googleOauth2Client.setCredentials(tokens);
+
+    const user = google.oauth2({ version: "v2", auth: oauth2Client });
+    const { data } = await user.userinfo.get();
+
+    if (!data.id) throw { message: "Get data from google failed" };
+  }
+
+  public async requestLoginWithGithub(req: Request, res: Response) {}
+
+  private async findOrCreateUser(
+    loginMethod: Pick<RequestWithUser, "loginMethod">,
+    platformId: string,
+    platformName?: string
+  ) {
+    const isUserExist = await userModel.findOne({});
+  }
+}

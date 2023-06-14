@@ -8,6 +8,8 @@ function createChains<T>(keys: Record<string, T>) {
   };
 }
 
+const test = createChains(authenticateValidationSchemas);
+
 const validationChains = {
   authenticate: createChains(authenticateValidationSchemas),
 };

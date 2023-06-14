@@ -19,3 +19,15 @@ const appRouter = (app: Express) => {
 };
 
 export default appRouter;
+
+export class AppRouter {
+  public router = Router()
+
+  constructor() {
+
+  }
+
+  private initAppRouter() {
+    this.router
+  }
+}

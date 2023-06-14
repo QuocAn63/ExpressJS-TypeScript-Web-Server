@@ -58,3 +58,5 @@ type authValidationType = keyof typeof authenticateValidationSchemas;
 
 const authenticate = (...keys: authValidationType[]) =>
   keys.map((key) => authenticateValidationSchemas[key]);
+
+export default authenticate;
