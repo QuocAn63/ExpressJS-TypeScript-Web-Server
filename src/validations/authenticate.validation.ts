@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-const authenticateValidationSchemas = {
+export const authenticateValidationSchemas = {
   username: body("username")
     .trim()
     .notEmpty()
@@ -58,7 +58,3 @@ type authValidationType = keyof typeof authenticateValidationSchemas;
 
 const authenticate = (...keys: authValidationType[]) =>
   keys.map((key) => authenticateValidationSchemas[key]);
-
-export const validationChains = {
-  authenticate,
-};

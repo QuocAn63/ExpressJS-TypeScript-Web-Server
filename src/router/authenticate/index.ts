@@ -12,7 +12,7 @@ import {
   register,
 } from "../../controllers/authenticate";
 import { checkToken } from "../../middlewares/checkToken";
-import { validationChains } from "../../validations/authenticate.validation";
+import validationChains from "../../validations";
 
 const router = express.Router();
 

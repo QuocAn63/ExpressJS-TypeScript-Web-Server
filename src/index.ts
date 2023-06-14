@@ -6,6 +6,7 @@ import appRouter from "./router/index";
 import chalk from "chalk";
 import dbConnector from "./util/database/dbConnector";
 import path from "path";
+import pathToSwaggerUi from "swagger-ui-dist";
 
 require("dotenv").config();
 
@@ -16,6 +17,7 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(pathToSwaggerUi.absolutePath()));
 
 app.use(express.json());
 app.use(cors());

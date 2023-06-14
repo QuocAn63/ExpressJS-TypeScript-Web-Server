@@ -41,3 +41,36 @@ export const getAllUsers = async (
     next(err);
   }
 };
+
+export const getUser = async (
+  req: Request,
+  res: Response<IResponseData>,
+  next: NextFunction
+) => {
+  try {
+    const { username } = req.params;
+    const userResponse = await userModel
+      .findOne({ username }, { password: 0 })
+      .exec();
+
+    if (!userResponse) {
+      throw { message: "User not found", status: 404 };
+    }
+
+    return res.status(200).json({ data: userResponse });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateUser = async (
+  req: Request,
+  res: Response<IResponseData>,
+  next: NextFunction
+) => {
+  try {
+    const { username } = req.params;
+  } catch (err) {
+    next(err);
+  }
+};
