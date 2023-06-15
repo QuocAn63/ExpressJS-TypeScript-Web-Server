@@ -1,5 +1,5 @@
 import express from "express";
-import { Routes } from "./types/routes.interface";
+import { Routes } from "./interfaces/routes.interface";
 import morgan from "morgan";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -22,8 +22,8 @@ export class App {
 
     this.initializeDatabase();
     this.initializeStaticPaths();
-    this.initializeRoutes(routes);
     this.initializeMiddlewares();
+    this.initializeRoutes(routes);
     this.intializeErrorHandling();
   }
 

@@ -4,6 +4,7 @@ import {
   InferSchemaType,
   Document,
   HydratedDocument,
+  SchemaTypes,
 } from "mongoose";
 
 const userSchema = new Schema(
@@ -27,6 +28,25 @@ const userSchema = new Schema(
     },
     googleId: {
       type: String,
+    },
+    dob: {
+      type: SchemaTypes.Date,
+    },
+    address: {
+      type: String,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+    },
+    roles: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "admin",
+    },
+    isActived: {
+      type: SchemaTypes.Boolean,
+      default: true,
     },
   },
   {

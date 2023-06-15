@@ -1,5 +1,5 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
-import { IResponseData } from "../types/response";
+import { IResponseData } from "../interfaces/response.interface";
 
 export const errorHandler: ErrorRequestHandler = (
   err: any,
@@ -13,3 +13,17 @@ export const errorHandler: ErrorRequestHandler = (
 
   return res.status(status).json({ error: message, detail });
 };
+
+export class ErrorController {
+  public errorHandler<ErrorRequestHandler>(
+    err: any,
+    req: Request,
+    res: Response<IResponseData>
+  ) {
+    const message = err.message || "Error";
+    const status = err.status || 400;
+    const detail = err.detail || err;
+
+    return res.status(status).json({ error: message, detail });
+  }
+}
