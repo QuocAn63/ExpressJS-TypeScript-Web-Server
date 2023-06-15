@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { google } from "googleapis";
-import userModel from "../models/user";
+import userModel, { userType } from "../models/user";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { IResponseData } from "../types/response";
@@ -364,20 +364,30 @@ export const changePassword = async (
 };
 
 export class AuthController {
+  public googleCallbackUrl = "http://localhost:3001/api/auth/google/callback";
+  public githubCallbackUrl = "http://localhost:3001/api/auth/github/callback";
   public githubAuthUrl = "https://github.com/login/oauth/authorize";
   public googleOauth2Client = new google.auth.OAuth2(
     "743433801669-j169dda6jeac7uu97a1rgrpqev40jmhm.apps.googleusercontent.com",
     "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",
-    "http://localhost:3001/api/auth/google/callback"
+    this.googleCallbackUrl
   );
   public googleProfileApiScope =
     "https://www.googleapis.com/auth/userinfo.profile";
+  public githubClientId = process.env.GITHUB_CLIENT_ID;
+  public githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
 
   public async login(
-    req: Request,
+    req: RequestWithUser,
     res: Response<IResponseData>,
     next: NextFunction
-  ) {}
+  ) {
+    let userId: string;
+
+    const { loginMethod, user } = req;
+
+    if (loginMethod && user) userId = user.id;
+  }
 
   public async register(
     req: Request,
@@ -403,27 +413,105 @@ export class AuthController {
     res.status(301).redirect(authorizationUrl);
   }
 
-  public async handleGoogleCallback(req: RequestWithUser, res: Response) {
-    let q = req.query;
+  public async handleGoogleCallback(
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      let q = req.query;
 
-    if (q.error) throw { message: q.error };
+      if (q.error) throw { message: q.error };
 
-    let { tokens } = await this.googleOauth2Client.getToken(q.code as string);
-    this.googleOauth2Client.setCredentials(tokens);
+      let { tokens } = await this.googleOauth2Client.getToken(q.code as string);
+      this.googleOauth2Client.setCredentials(tokens);
 
-    const user = google.oauth2({ version: "v2", auth: oauth2Client });
-    const { data } = await user.userinfo.get();
+      const user = google.oauth2({ version: "v2", auth: oauth2Client });
+      const { data } = await user.userinfo.get();
 
-    if (!data.id) throw { message: "Get data from google failed" };
+      if (!data.id) throw { message: "Get data from google failed" };
+
+      const { loginMethod, user: fetchedUser } = await this.findOrCreateUser(
+        "google",
+        data.id
+      );
+
+      req.user = fetchedUser;
+      req.loginMethod = loginMethod;
+      next();
+    } catch (err) {
+      next(err);
+    }
   }
 
-  public async requestLoginWithGithub(req: Request, res: Response) {}
+  public async requestLoginWithGithub(req: Request, res: Response) {
+    let redirectUri = `${this.githubAuthUrl}?client_id=${
+      this.githubClientId
+    }&redirect_uri=${encodeURI(this.githubCallbackUrl)}`;
+
+    res.redirect(redirectUri);
+  }
+
+  public async handleGithubCallback(
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { code } = req.query;
+
+      if (!code) throw { message: "Can not get login code from Github" };
+
+      const {
+        data: { access_token },
+      } = await axios.post(
+        `https://github.com/login/oauth/access_token?client_id=${this.githubClientId}&client_secret=${this.githubClientSecret}&code=${code}`,
+        {},
+        { headers: { Accept: "application/json" } }
+      );
+
+      if (!access_token)
+        throw { message: "Can not get access token from Github" };
+
+      const { data } = await axios.get(`https://api.github.com/user`, {
+        headers: {
+          Authorization: `token ${access_token}`,
+        },
+      });
+      if (!data.id) throw { message: "Can not find user from Github" };
+
+      const { loginMethod, user } = await this.findOrCreateUser(
+        "github",
+        data.id
+      );
+
+      req.user = user;
+      req.loginMethod = loginMethod;
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  }
 
   private async findOrCreateUser(
-    loginMethod: Pick<RequestWithUser, "loginMethod">,
+    loginMethod: RequestWithUser["loginMethod"],
     platformId: string,
     platformName?: string
-  ) {
-    const isUserExist = await userModel.findOne({});
+  ): Promise<Pick<RequestWithUser, "loginMethod" | "user">> {
+    const methodString = `${loginMethod}Id`;
+    const fetchUserResponse = await userModel.findOne({
+      [methodString]: platformId,
+    });
+
+    let userData =
+      fetchUserResponse !== null
+        ? fetchUserResponse
+        : await userModel.create({
+            [methodString]: platformId,
+            name: platformName,
+          });
+
+    return { loginMethod, user: userData };
   }
 }
