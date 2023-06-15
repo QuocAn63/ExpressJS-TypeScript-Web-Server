@@ -1,3 +1,20 @@
 import { config } from "dotenv";
 
-export const {} = process.env;
+config();
+
+export const {
+  PORT,
+  DATABASE_URI,
+  PW_SALT_ROUNDS,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  FACEBOOK_CLIENT_ID,
+  FACEBOOK_CLIENT_SECRET,
+  FACEBOOK_STATE,
+  SECRET_ACCESS_KEY,
+  SECRET_REFRESH_KEY,
+  ACCESS_TOKEN_LIFE,
+  REFRESH_TOKEN_LIFE,
+} = process.env;

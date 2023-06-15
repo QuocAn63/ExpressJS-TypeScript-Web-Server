@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import path from "path";
 import pathToSwaggerUi from "swagger-ui-dist";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 export class App {
   public app: express.Application;
@@ -68,6 +69,7 @@ export class App {
   private initializeMiddlewares() {
     this.app.use(morgan("tiny"));
     this.app.use(express.json());
+    this.app.use(cookieParser());
     this.app.use(cors());
     this.app.use(bodyParser.urlencoded({ extended: false }));
   }

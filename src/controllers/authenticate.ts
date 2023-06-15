@@ -191,20 +191,20 @@ export class AuthController {
   };
 
   private generateAuthTokens = (
-    payload: string | object
+    userId: string
   ): {
     accessToken: string;
     refreshToken: string;
   } => {
     const accessToken = jwt.sign(
       {
-        payload,
+        payload: { userId },
       },
       process.env.SECRET_ACCESS_KEY as string,
       { expiresIn: process.env.ACCESS_TOKEN_LIFE }
     );
     const refreshToken = jwt.sign(
-      { payload },
+      { payload: { userId } },
       process.env.SECRET_REFRESH_KEY as string,
       { expiresIn: process.env.REFRESH_TOKEN_LIFE }
     );

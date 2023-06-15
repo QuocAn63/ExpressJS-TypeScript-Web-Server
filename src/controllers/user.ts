@@ -71,9 +71,12 @@ export class UserController {
     next: NextFunction
   ) => {
     try {
-      const { username, password, newpassword } = req.params;
+      const { username } = req.params;
+      const { password, newpassword } = req.body;
       const user = req.user;
-      const saltRounds = process.env.PW_SALT_ROUNDS || 10;
+      const saltRounds = Number.parseInt(process.env.PW_SALT_ROUNDS || "10");
+
+      console.log(username, user?.username);
 
       if (username !== user?.username || user?.roles !== "admin")
         throw new HttpException(401, "Failed to authorize");
@@ -98,12 +101,10 @@ export class UserController {
       if (!fetchUpdateUserResponse)
         throw new HttpException(500, "Failed when update user password");
 
-      return res
-        .status(200)
-        .json({
-          message: "Password updated",
-          data: fetchUpdateUserResponse.id,
-        });
+      return res.status(200).json({
+        message: "Password updated",
+        data: fetchUpdateUserResponse.id,
+      });
     } catch (err) {
       next(err);
     }
