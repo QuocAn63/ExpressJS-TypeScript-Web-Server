@@ -30,3 +30,10 @@ const userValidationSchemas = {
     .withMessage("Invalid phone number")
     .bail(),
 };
+
+type userValidationType = keyof typeof userValidationSchemas;
+
+const userValidationRules = (...keys: userValidationType[]) =>
+  keys.map((key) => userValidationSchemas[key]);
+
+export default userValidationRules;

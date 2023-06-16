@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-export const authenticateValidationSchemas = {
+const authValidationSchemas = {
   username: body("username")
     .trim()
     .notEmpty()
@@ -54,9 +54,9 @@ export const authenticateValidationSchemas = {
     .escape(),
 };
 
-type authValidationType = keyof typeof authenticateValidationSchemas;
+type authValidationType = keyof typeof authValidationSchemas;
 
-const authenticate = (...keys: authValidationType[]) =>
-  keys.map((key) => authenticateValidationSchemas[key]);
+const authValidationRules = (...keys: authValidationType[]) =>
+  keys.map((key) => authValidationSchemas[key]);
 
-export default authenticate;
+export default authValidationRules;
