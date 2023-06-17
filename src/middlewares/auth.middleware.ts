@@ -7,9 +7,9 @@ import { SECRET_ACCESS_KEY } from "../config";
 import { DataStoredInToken, UserRoles } from "../interfaces/auth.interface";
 import userModel from "../models/user";
 
-const getAuthorization = (req: IRequestWithUser): string | null => {
+export const getAuthorization = (req: IRequestWithUser): string | null => {
   const cookie =
-    req.cookies["Authorization"] ||
+    req.cookies["token"] ||
     req.header("Authorization")?.split("Bearer ")[1] ||
     null;
 

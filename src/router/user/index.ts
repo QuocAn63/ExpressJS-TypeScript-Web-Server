@@ -16,19 +16,19 @@ export default class UserRoute implements Routes {
 
   public initializeRoutes(): void {
     this.router.put(
-      "/update",
+      "/:username",
       authorizationMiddleware("admin", "user"),
       uploadMiddleware.single("avatar"),
       this.userController.updateUserInfo
     );
     this.router.patch(
-      "/changepw",
+      "/:username/changepw",
       authorizationMiddleware("admin", "user"),
       this.userController.changeUserPassword
     );
     this.router.get("/:username", this.userController.getUserByUsername);
     this.router.delete(
-      "/",
+      "/:username",
       authorizationMiddleware("admin"),
       this.userController.deleteUser
     );
