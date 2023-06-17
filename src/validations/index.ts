@@ -1,8 +1,9 @@
-import authValidationRules from "./authenticate.validation"
-import userValidationRules from "./user.validation"
+import authValidationRules from "./authenticate.validation";
+import userValidationRules from "./user.validation";
 
-export const validationMiddleware = {
-  authValidationRules: 
-}
+const bodyValidator = {
+  authValidationRules,
+  userValidationRules,
+};
 
-validationMiddleware.authValidation()
+export default bodyValidator;

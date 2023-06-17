@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { NextFunction, Request, Response } from "express";
 import { IResponseData } from "../interfaces/response.interface";
-import userModel from "../models/user";
+import userModel, { userType } from "../models/user";
 import HttpException from "../exceptions/httpException";
 import { IRequestWithUser } from "../interfaces/request.interface";
 
@@ -71,15 +71,9 @@ export class UserController {
     next: NextFunction
   ) => {
     try {
-      const { username } = req.params;
       const { password, newpassword } = req.body;
-      const user = req.user;
+      const user = req.user as userType; // the user can not be null at this time
       const saltRounds = Number.parseInt(process.env.PW_SALT_ROUNDS || "10");
-
-      console.log(username, user?.username);
-
-      if (username !== user?.username || user?.roles !== "admin")
-        throw new HttpException(401, "Failed to authorize");
 
       if (!user.password)
         throw new HttpException(
@@ -105,6 +99,72 @@ export class UserController {
         message: "Password updated",
         data: fetchUpdateUserResponse.id,
       });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public updateUserInfo = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const user = req.user as userType;
+      const { username, dob, address, gender, name, roles, status, avatar } =
+        req.body;
+      const query = userModel.findOne({ username });
+      const adminAuthorized = user.roles.includes("admin");
+
+      if (user.username !== username && !adminAuthorized)
+        throw new HttpException(403, "Unauthorized action");
+
+      if (dob) query.updateOne({ dob });
+      if (address) query.updateOne({ address });
+      if (gender) query.updateOne({ gender });
+      if (name) query.updateOne({ name });
+      if (avatar) query.updateOne({ avatar });
+      if (adminAuthorized) {
+        if (roles) query.updateOne({ roles });
+        if (status) query.updateOne({ isActived: status });
+      }
+
+      const fetchUpdateUserResponse = await query.exec();
+
+      if (!fetchUpdateUserResponse)
+        throw new HttpException(404, "Can not find user to update");
+
+      return res.status(200).json({
+        message: "User info updated",
+        data: fetchUpdateUserResponse.id,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public deleteUser = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const user = req.user as userType;
+      const { username } = req.body;
+
+      if (!("admin" in user.roles))
+        throw new HttpException(403, "Unauthorized action");
+
+      const fetchDeleteUserResponse = await userModel.findOneAndDelete({
+        username,
+      });
+
+      if (!fetchDeleteUserResponse)
+        throw new HttpException(404, "Can not find user to delete");
+
+      return res
+        .status(200)
+        .json({ message: "User deleted", data: fetchDeleteUserResponse.id });
     } catch (err) {
       next(err);
     }

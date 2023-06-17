@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { AuthController } from "../../controllers/authenticate";
 import { Routes } from "../../interfaces/routes.interface";
-import { Auth } from "googleapis";
+import bodyValidator from "../../validations";
+import validationMiddleware from "../../middlewares/validate.middleware";
 
 export default class AuthRoute implements Routes {
   public path = "/auth";
@@ -33,7 +34,12 @@ export default class AuthRoute implements Routes {
       "/login/github",
       this.authController.requestLoginWithGithub
     );
-    this.router.post("/login", this.authController.login);
+    this.router.post(
+      "/login",
+      bodyValidator.authValidationRules("username", "password"),
+      validationMiddleware,
+      this.authController.login
+    );
 
     this.router.post("/register", this.authController.register);
     // this.router.post("/token", checkToken, regenerateToken);

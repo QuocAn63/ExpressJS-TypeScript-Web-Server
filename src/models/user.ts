@@ -20,6 +20,9 @@ const userSchema = new Schema(
     name: {
       type: String,
     },
+    avatar: {
+      type: String,
+    },
     facebookId: {
       type: String,
     },
@@ -39,11 +42,13 @@ const userSchema = new Schema(
       type: String,
       enum: ["male", "female"],
     },
-    roles: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "admin",
-    },
+    roles: [
+      {
+        type: String,
+        enum: ["user", "admin"],
+        default: "admin",
+      },
+    ],
     isActived: {
       type: SchemaTypes.Boolean,
       default: true,
