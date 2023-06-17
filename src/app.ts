@@ -9,6 +9,7 @@ import path from "path";
 import pathToSwaggerUi from "swagger-ui-dist";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import fs from "fs";
 
 export class App {
   public app: express.Application;
@@ -40,7 +41,11 @@ export class App {
   }
 
   private initializeStaticPaths() {
-    this.app.use(express.static(path.join(__dirname, "public")));
+    console.log(fs.existsSync(path.join(__dirname, "../public/uploads")));
+    this.app.use(
+      "/uploads",
+      express.static(path.join(__dirname, "../public/uploads"))
+    );
     this.app.use(express.static(pathToSwaggerUi.absolutePath()));
   }
 

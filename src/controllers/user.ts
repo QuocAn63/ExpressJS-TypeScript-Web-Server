@@ -111,11 +111,11 @@ export class UserController {
   ) => {
     try {
       const user = req.user as userType;
-      const { username, dob, address, gender, name, roles, status, avatar } =
-        req.body;
+      const { username, dob, address, gender, name, roles, status } = req.body;
+      const avatar = req.file;
       const query = userModel.findOne({ username });
       const adminAuthorized = user.roles.includes("admin");
-
+      console.log(avatar);
       if (user.username !== username && !adminAuthorized)
         throw new HttpException(403, "Unauthorized action");
 
@@ -123,7 +123,7 @@ export class UserController {
       if (address) query.updateOne({ address });
       if (gender) query.updateOne({ gender });
       if (name) query.updateOne({ name });
-      if (avatar) query.updateOne({ avatar });
+      if (avatar) query.updateOne({ avatar: avatar.path });
       if (adminAuthorized) {
         if (roles) query.updateOne({ roles });
         if (status) query.updateOne({ isActived: status });
@@ -133,6 +133,8 @@ export class UserController {
 
       if (!fetchUpdateUserResponse)
         throw new HttpException(404, "Can not find user to update");
+
+      console.log(fetchUpdateUserResponse);
 
       return res.status(200).json({
         message: "User info updated",

@@ -6,20 +6,27 @@ import fs from "fs";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const parentPathName = file.fieldname;
-    const folderPath = path.join(__dirname, `public/uploads/${parentPathName}`);
-    console.log(folderPath);
-    if (!fs.existsSync(folderPath)) {
-      fs.mkdirSync(folderPath);
-    }
+    try {
+      const parentPathName = file.fieldname;
+      const folderPath = path.join(
+        __dirname,
+        `../../public/uploads/${parentPathName}`
+      );
+      if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath);
+      }
 
-    cb(null, `./public/uploads/${parentPathName}`);
+      cb(null, `./public/uploads/${parentPathName}`);
+    } catch (err) {
+      console.log(err);
+      cb(new HttpException(500, "Error when storing file"), "/public/uploads/");
+    }
   },
   filename: (req, file, cb) => {
     const timestampString = Date.now();
     const ext = path.extname(file.originalname);
 
-    cb(null, `${timestampString}.${ext}`);
+    cb(null, `${timestampString}${ext}`);
   },
 });
 
