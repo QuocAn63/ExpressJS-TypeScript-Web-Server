@@ -1,0 +1,14 @@
+openapi: 3.0.0
+info:
+  title: Ecommerece ExpressJS TypeScript Web Server
+  description: API Server for Ecommerce Website
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001
+  description: Main product server
+paths:
+  /auth/login:
+    post:
+      summary: Login to get access and refresh token from server.
+      parameters:
+        - username: 

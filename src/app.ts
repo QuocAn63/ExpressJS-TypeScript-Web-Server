@@ -41,7 +41,6 @@ export class App {
   }
 
   private initializeStaticPaths() {
-    console.log(fs.existsSync(path.join(__dirname, "../public/uploads")));
     this.app.use(
       "/uploads",
       express.static(path.join(__dirname, "../public/uploads"))
@@ -75,7 +74,7 @@ export class App {
     this.app.use(morgan("tiny"));
     this.app.use(express.json());
     this.app.use(cookieParser());
-    this.app.use(cors());
+    this.app.use(cors({ origin: "http://localhost:3001" }));
     this.app.use(bodyParser.urlencoded({ extended: false }));
   }
 
