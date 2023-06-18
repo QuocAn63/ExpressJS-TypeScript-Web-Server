@@ -1,7 +1,8 @@
 import { App } from "./app";
-import AuthRoute from "./router/authenticate";
+import AuthRoute from "./router/auth";
+import ProductRoute from "./router/product";
 import UserRoute from "./router/user";
 
-const app = new App(new AuthRoute(), new UserRoute());
+const app = new App(new AuthRoute(), new UserRoute(), new ProductRoute());
 
 app.listen();

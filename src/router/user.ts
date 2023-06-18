@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { UserController } from "../../controllers/user";
-import { Routes } from "../../interfaces/routes.interface";
-import authorizationMiddleware from "../../middlewares/auth.middleware";
-import uploadMiddleware from "../../middlewares/upload.middleware";
+import { UserController } from "../controllers/user";
+import { Routes } from "../interfaces/routes.interface";
+import authorizationMiddleware from "../middlewares/auth.middleware";
+import uploadMiddleware from "../middlewares/upload.middleware";
 
 export default class UserRoute implements Routes {
   public isApiPath = true;

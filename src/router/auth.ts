@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { AuthController } from "../../controllers/authenticate";
-import { Routes } from "../../interfaces/routes.interface";
-import bodyValidator from "../../validations";
-import validationMiddleware from "../../middlewares/validate.middleware";
+import { AuthController } from "../controllers/authenticate";
+import { Routes } from "../interfaces/routes.interface";
+import bodyValidator from "../validations";
+import validationMiddleware from "../middlewares/validate.middleware";
 
 export default class AuthRoute implements Routes {
   public path = "/auth";
