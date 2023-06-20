@@ -1,4 +1,4 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { HydratedDocument, InferSchemaType, Types } from "mongoose";
 
 const promotionSchema = new mongoose.Schema(
   {
@@ -19,10 +19,32 @@ const promotionSchema = new mongoose.Schema(
     expiredIn: {
       type: Date,
     },
-    isExpired: Boolean,
   },
   {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
     timestamps: true,
+    query: {
+      sortByDate(date: "newest" | "oldest") {
+        let value: "desc" | "asc" = date === "newest" ? "desc" : "asc";
+        return this.sort({ createdAt: value });
+      },
+      byType(type: "percentage" | "amount") {
+        return this.find({ [type]: { $exists: true } });
+      },
+      sortByPercentage(order: "desc" | "asc") {
+        return this.find({ percentage: { $exists: true } }).sort({
+          percentage: order,
+        });
+      },
+      sortByAmount(order: "desc" | "asc") {
+        return this.find({ amount: { $exists: true } }).sort({ amount: order });
+      },
+      byStatus(expired: boolean) {
+        if (expired) return this.find({ isExpired: { $exists: true } });
+        return this.find({ isExpired: { $exists: false } });
+      },
+    },
     statics: {
       createPercentage(
         title: string,
@@ -62,15 +84,25 @@ const productSchema = new mongoose.Schema(
     slug: String,
     theme: String,
     images: String,
-    price: Number,
+    price: {
+      type: Number,
+      min: 1,
+    },
     promotion: {
       type: Types.ObjectId,
       ref: "promotions",
     },
-    solds: Number,
-    stocks: Number,
-    ratings: [{ type: Types.ObjectId, ref: "users" }],
-    comments: [{ type: Types.ObjectId, ref: "comments" }],
+    solds: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    stocks: {
+      type: Number,
+      min: 1,
+    },
+    ratings: [{ type: Types.ObjectId, ref: "user" }],
+    comments: [{ type: Types.ObjectId, ref: "comment" }],
     status: {
       type: String,
       enum: ["visible", "invisible"],
@@ -97,11 +129,9 @@ const productSchema = new mongoose.Schema(
         let value: "desc" | "asc" = date === "newest" ? "desc" : "asc";
         return this.sort({ date: value });
       },
-      //   sortByRating(order: "desc" | "asc") {
-      //     return this.find().populate("users", "_id").projection({
-      //       ratings: { $size: "$ratings" },
-      //     });
-      //   },
+      sortByRating(order: "desc" | "asc") {
+        return this.sort({ ratingCounts: order });
+      },
       minPrice(price: number | string) {
         let value = typeof price === "string" ? Number.parseInt(price) : price;
         return this.find({ price: { $gt: value } });
@@ -112,24 +142,41 @@ const productSchema = new mongoose.Schema(
       },
     },
     statics: {
-      likeOrUnlikeProduct(slug: string, userId: string) {
-        return this.updateOne({ slug }, [
-          {
-            $set: {
-              ratings: {
-                $cond: {
-                  if: { $exists: userId },
-                  then: { $pull: userId },
-                  else: { $push: userId },
-                },
-              },
-            },
-          },
-        ]);
+      async likeOrUnlikeProduct(slug: string, userId: string) {
+        const isLiked = await this.findOne({ slug, ratings: { $in: userId } });
+
+        if (!isLiked)
+          return this.updateOne({ slug }, { $push: { ratings: userId } });
+        return this.updateOne({ slug }, { $pull: { ratings: userId } });
       },
+    },
+    toJSON: {
+      virtuals: true,
+    },
+    toObject: {
+      virtuals: true,
     },
   }
 );
+
+productSchema.virtual("ratingCounts", {
+  ref: "user",
+  localField: "ratings._id",
+  foreignField: "_id",
+  count: true,
+});
+
+productSchema.pre("find", function () {
+  this.populate("ratingCounts");
+});
+
+export type promotionType = HydratedDocument<
+  InferSchemaType<typeof promotionSchema>
+>;
+
+export type productType = HydratedDocument<
+  InferSchemaType<typeof productSchema>
+>;
 
 export const promotionModel = mongoose.model("promotions", promotionSchema);
 const productModel = mongoose.model("products", productSchema);

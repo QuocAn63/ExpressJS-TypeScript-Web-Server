@@ -1,26 +1,29 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import { IResponseData } from "../interfaces/response.interface";
 import { IRequestWithUser } from "../interfaces/request.interface";
-import productModel from "../models/product";
+import productModel, { productType } from "../models/product";
 import { userType } from "../models/user";
 import HttpException from "../exceptions/httpException";
+import slugify from "slugify";
+import { fileType } from "../interfaces/files.interface";
+
+export const sortOptions = {
+  value: ["asc", "desc"],
+  time: ["newest", "oldest"],
+};
 
 export default class ProductController {
-  public async getProducts(
+  public getProducts = async (
     req: IRequestWithUser,
     res: Response<IResponseData>,
     next: NextFunction
-  ) {
+  ) => {
     try {
       const { name, price, minPrice, maxPrice, date, rating, status } =
         req.query;
       const user = req.user;
       const isAuthorized = user?.roles.includes("admin");
       const query = productModel.find();
-      const sortOptions = {
-        value: ["asc", "desc"],
-        time: ["newest", "oldest"],
-      };
 
       if (name && typeof name === "string") query.byName(name);
       if (
@@ -52,19 +55,75 @@ export default class ProductController {
       )
         query.byStatus(status as "visible" | "invinsible" | "all");
 
-      const fetchProductsResponse = await query.exec();
+      const fetchProductsResponse = await query
+        .exec()
+        .then((data) => this.checkUserLiked(data, user?.id));
 
       return res.status(200).json({ data: fetchProductsResponse });
     } catch (err) {
       next(err);
     }
-  }
+  };
 
-  public async likeProduct(
+  public getProduct = async (
     req: IRequestWithUser,
     res: Response<IResponseData>,
     next: NextFunction
-  ) {
+  ) => {
+    try {
+      const { slug } = req.params;
+
+      const fetchProductsResponse = await productModel.find({ slug });
+
+      if (!fetchProductsResponse)
+        return res.status(404).json({ message: "Product not found" });
+
+      return res.status(200).json({ data: fetchProductsResponse });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public updateProduct = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const { slug } = req.params;
+      const { name, price, stocks, status, promotion } = req.body;
+      const user = req.user as userType;
+      const isAuthorized = user.roles.includes("admin");
+      const files = req.files as fileType;
+      const theme = files["theme"][0];
+      const images = files["images"];
+      const query = productModel.findOne({ slug });
+      if (name && typeof name === "string") query.updateOne({ name });
+      if (price && typeof price === "number") query.updateOne({ price });
+      if (stocks && typeof stocks === "number") query.updateOne({ stocks });
+      if (isAuthorized && status && typeof status === "string")
+        query.updateOne({ status });
+      if (theme) query.updateOne({ theme: theme.path });
+      if (images) query.updateOne({ images: images.map((img) => img.path) });
+      const fetchUpdateProductResponse = await query.exec();
+
+      if (!fetchUpdateProductResponse)
+        throw new HttpException(500, "Can not update product");
+
+      return res.status(200).json({
+        message: "Product updated",
+        data: fetchUpdateProductResponse.id,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public likeProduct = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
     try {
       const user = req.user as userType;
       const { slug } = req.params;
@@ -81,5 +140,85 @@ export default class ProductController {
     } catch (err) {
       next(err);
     }
-  }
+  };
+
+  public createProduct = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const user = req.user as userType;
+      const { name, price, stocks, promotion } = req.body;
+      const files = req.files as fileType;
+      const theme = files["theme"][0];
+      const images = files["images"]
+        ? files["images"].map((img) => img.path)
+        : null;
+
+      const slug = slugify(name, { lower: true, trim: true, replacement: "_" });
+
+      const fetchCreateProductResponse = await productModel.create({
+        name,
+        slug,
+        theme,
+        images,
+        price,
+        stocks,
+        promotion,
+      });
+
+      if (!fetchCreateProductResponse)
+        throw new HttpException(500, "Can not create product");
+
+      return res.status(200).json({
+        message: "Product created",
+        data: fetchCreateProductResponse.id,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public deleteProduct = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const { slug } = req.params;
+      const fetchDeleteProductResponse = await productModel.findOneAndDelete({
+        slug,
+      });
+
+      if (!fetchDeleteProductResponse)
+        throw new HttpException(500, "Can not delete product");
+
+      return res.status(200).json({
+        message: "Product deleted",
+        data: fetchDeleteProductResponse.id,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  private checkUserLiked = (
+    documents: productType | productType[],
+    userId?: string
+  ) => {
+    if (!userId) return documents;
+
+    const check = (document: productType) => {
+      const isLiked = document.ratings.some((id: any) => {
+        return id.toString() === userId;
+      });
+
+      if (isLiked) return { ...document.toObject(), userLiked: true };
+      return document;
+    };
+
+    if (Array.isArray(documents)) return documents.map(check);
+    return check(documents);
+  };
 }

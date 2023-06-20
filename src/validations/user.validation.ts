@@ -3,32 +3,29 @@ import { body } from "express-validator";
 const userValidationSchemas = {
   name: body("name")
     .trim()
-    .notEmpty()
-    .withMessage("Name can not be empty")
     .isString()
     .withMessage("Name must be string")
     .escape()
-    .bail(),
+    .bail()
+    .optional(),
   dob: body("dob")
     .trim()
-    .notEmpty()
-    .withMessage("Date of birth can not be empty")
     .isDate()
     .withMessage("Date of birth must be Date type")
-    .bail(),
-  sex: body("gender")
+    .bail()
+    .optional(),
+  gender: body("gender")
     .trim()
-    .notEmpty()
-    .withMessage("Gender can not be empty")
     .custom((value) => value in ["male", "female"])
-    .withMessage("Unknown gender"),
+    .withMessage("Unknown gender")
+    .bail()
+    .optional(),
   phonenumber: body("phonenumber")
     .trim()
-    .notEmpty()
-    .withMessage("Phone number can not be empty")
     .isMobilePhone("vi-VN")
     .withMessage("Invalid phone number")
-    .bail(),
+    .bail()
+    .optional(),
 };
 
 type userValidationType = keyof typeof userValidationSchemas;

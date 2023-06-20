@@ -2,18 +2,17 @@ import {
   Schema,
   model,
   InferSchemaType,
-  Document,
   HydratedDocument,
   SchemaTypes,
+  Types,
 } from "mongoose";
 
-const userSchema = new Schema(
+export const userSchema = new Schema(
   {
     username: {
       type: String,
       minlength: 6,
       maxlength: 25,
-      unique: true
     },
     password: {
       type: String,
@@ -43,13 +42,12 @@ const userSchema = new Schema(
       type: String,
       enum: ["male", "female"],
     },
-    roles: [
-      {
-        type: String,
-        enum: ["user", "admin"],
-        default: "admin",
-      },
-    ],
+    phonenumber: String,
+    roles: {
+      type: [String],
+      enum: ["user", "admin"],
+      default: ["user"],
+    },
     isActived: {
       type: SchemaTypes.Boolean,
       default: true,

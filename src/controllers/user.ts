@@ -111,8 +111,9 @@ export class UserController {
   ) => {
     try {
       const user = req.user as userType;
-      const { username } = req.params
-      const { dob, address, gender, name, roles, status } = req.body;
+      const { username } = req.params;
+      const { dob, address, gender, name, roles, status, phonenumber } =
+        req.body;
       const avatar = req.file;
       const query = userModel.findOne({ username });
       const adminAuthorized = user.roles.includes("admin");
@@ -124,6 +125,7 @@ export class UserController {
       if (address) query.updateOne({ address });
       if (gender) query.updateOne({ gender });
       if (name) query.updateOne({ name });
+      if (phonenumber) query.updateOne({ phonenumber });
       if (avatar) query.updateOne({ avatar: avatar.path });
       if (adminAuthorized) {
         if (roles) query.updateOne({ roles });
@@ -153,7 +155,7 @@ export class UserController {
   ) => {
     try {
       const user = req.user as userType;
-      const { username } = req.params
+      const { username } = req.params;
 
       if (!("admin" in user.roles))
         throw new HttpException(403, "Unauthorized action");

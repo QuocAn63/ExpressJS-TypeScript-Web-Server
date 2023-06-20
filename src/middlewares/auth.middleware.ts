@@ -17,7 +17,7 @@ export const getAuthorization = (req: IRequestWithUser): string | null => {
 };
 
 const authorizationMiddleware =
-  (...params: UserRoles[]) =>
+  (isPublic = false, ...params: UserRoles[]) =>
   async (
     req: IRequestWithUser,
     res: Response<IResponseData>,
@@ -26,32 +26,35 @@ const authorizationMiddleware =
     try {
       const authorization = getAuthorization(req);
 
-      if (!authorization)
-        return next(new HttpException(401, "Missing authentication token"));
+      if (authorization) {
+        const { payload } = jwt.verify(
+          authorization as string,
+          SECRET_ACCESS_KEY as string
+        ) as DataStoredInToken;
+        const fetchUserResponse = await userModel.findOne({
+          _id: payload.userId,
+        });
 
-      const { payload } = jwt.verify(
-        authorization,
-        SECRET_ACCESS_KEY as string
-      ) as DataStoredInToken;
-      const fetchUserResponse = await userModel.findOne({
-        _id: payload.userId,
-      });
+        if (!fetchUserResponse)
+          return next(
+            new HttpException(404, "Can not find user with the given token")
+          );
 
-      if (!fetchUserResponse)
-        return next(
-          new HttpException(404, "Can not find user with the given token")
+        const isUserAccessAuthorized = params.some((paramRole) =>
+          fetchUserResponse.roles.includes(paramRole)
         );
 
-      const isUserAccessAuthorized = params.some((paramRole) =>
-        fetchUserResponse.roles.includes(paramRole)
-      );
+        if (!isUserAccessAuthorized)
+          return next(new HttpException(403, "Unauthorized action"));
 
-      if (!isUserAccessAuthorized)
-        return next(new HttpException(403, "Unauthorized action"));
+        req.user = fetchUserResponse;
 
-      req.user = fetchUserResponse;
-
-      next();
+        next();
+      } else {
+        if (!isPublic)
+          next(new HttpException(401, "Missing authentication token"));
+        next();
+      }
     } catch (err) {
       next(new HttpException(401, "Token expired"));
     }

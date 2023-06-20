@@ -7,7 +7,12 @@ import { IResponseData } from "../interfaces/response.interface";
 import axios from "axios";
 import { IRequestWithUser } from "../interfaces/request.interface";
 import HttpException from "../exceptions/httpException";
-import { ACCESS_TOKEN_LIFE, PW_SALT_ROUNDS, SECRET_ACCESS_KEY, SECRET_REFRESH_KEY } from '../config'
+import {
+  ACCESS_TOKEN_LIFE,
+  PW_SALT_ROUNDS,
+  SECRET_ACCESS_KEY,
+  SECRET_REFRESH_KEY,
+} from "../config";
 
 export class AuthController {
   private googleCallbackUrl = "http://localhost:3001/api/auth/google/callback";
@@ -54,7 +59,9 @@ export class AuthController {
 
       const { accessToken, refreshToken } = this.generateAuthTokens(userId);
 
-      return this.setUserSession(res, accessToken).status(200).json({ data: { accessToken, refreshToken } });
+      return this.setUserSession(res, accessToken)
+        .status(200)
+        .json({ data: { accessToken, refreshToken } });
     } catch (err) {
       next(err);
     }
@@ -66,17 +73,24 @@ export class AuthController {
     next: NextFunction
   ) => {
     try {
-      const { username, password } = req.body
-      const saltRounds = Number.parseInt(PW_SALT_ROUNDS || "10")
-      const encodedPw = bcrypt.hash(password, saltRounds)
+      const { username, password } = req.body;
+      const saltRounds = Number.parseInt(PW_SALT_ROUNDS || "10");
+      const encodedPw = await bcrypt.hash(password, saltRounds);
 
-      const fetchCreateUserResponse = await userModel.create({username, password: encodedPw})
-    
-      if(!fetchCreateUserResponse) throw new HttpException(500, "Error when saving user")
+      const fetchCreateUserResponse = await userModel.create({
+        username,
+        password: encodedPw,
+      });
 
-      return res.status(200).json({message: "Register success", data: fetchCreateUserResponse.id})
+      if (!fetchCreateUserResponse)
+        throw new HttpException(500, "Error when saving user");
+
+      return res.status(200).json({
+        message: "Register success",
+        data: fetchCreateUserResponse.id,
+      });
     } catch (err) {
-      next(err)
+      next(err);
     }
   };
 
@@ -85,7 +99,9 @@ export class AuthController {
     res: Response<IResponseData>,
     next: NextFunction
   ) => {
-    return this.clearUserSession(res).status(200).json({message: "Logout success"})
+    return this.clearUserSession(res)
+      .status(200)
+      .json({ message: "Logout success" });
   };
 
   public requestLoginWithGoogle = async (req: Request, res: Response) => {
@@ -186,21 +202,30 @@ export class AuthController {
     }
   };
 
-  public refreshAccessToken = async (req: IRequestWithUser, res: Response<IResponseData>, next: NextFunction) => {
+  public refreshAccessToken = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
     try {
-      const { token } = req.body
+      const { token } = req.body;
 
-      const tokenPayload = jwt.verify(token, SECRET_REFRESH_KEY as string)
+      const tokenPayload = jwt.verify(token, SECRET_REFRESH_KEY as string);
 
-      if(!tokenPayload) throw new HttpException(403, "Invalid refresh token")
+      if (!tokenPayload) throw new HttpException(403, "Invalid refresh token");
 
-      const newAccessToken = jwt.sign(tokenPayload, SECRET_ACCESS_KEY as string)
-      
-      return this.setUserSession(res, newAccessToken).status(200).json({message: "Token refreshed"})
+      const newAccessToken = jwt.sign(
+        tokenPayload,
+        SECRET_ACCESS_KEY as string
+      );
+
+      return this.setUserSession(res, newAccessToken)
+        .status(200)
+        .json({ message: "Token refreshed" });
     } catch (err) {
-      next(err)
-    } 
-  }
+      next(err);
+    }
+  };
 
   private findOrCreateUser = async (
     loginMethod: IRequestWithUser["loginMethod"],
@@ -246,12 +271,14 @@ export class AuthController {
   };
 
   private setUserSession(res: Response, token: string) {
-    const tokenLife = new Date(Date.now() + Number.parseInt(ACCESS_TOKEN_LIFE || "7200000"))
+    const tokenLife = new Date(
+      Date.now() + Number.parseInt(ACCESS_TOKEN_LIFE || "7200000")
+    );
 
-    return res.cookie("token", token, {expires: tokenLife})
+    return res.cookie("token", token, { expires: tokenLife });
   }
 
   private clearUserSession(res: Response) {
-    return res.cookie("token", "")
+    return res.cookie("token", "");
   }
 }

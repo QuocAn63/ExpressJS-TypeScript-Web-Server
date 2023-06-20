@@ -41,8 +41,22 @@ export default class AuthRoute implements Routes {
       this.authController.login
     );
 
-    this.router.post("/register", this.authController.register);
-    this.router.post("/token", this.authController.refreshAccessToken);
+    this.router.post(
+      "/register",
+      bodyValidator.authValidationRules(
+        "username",
+        "password",
+        "passwordconfirm"
+      ),
+      validationMiddleware,
+      this.authController.register
+    );
+    this.router.post(
+      "/token",
+      bodyValidator.authValidationRules("token"),
+      validationMiddleware,
+      this.authController.refreshAccessToken
+    );
   }
 }
 
