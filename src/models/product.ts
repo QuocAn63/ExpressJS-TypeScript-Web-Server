@@ -168,6 +168,7 @@ productSchema.virtual("ratingCounts", {
 
 productSchema.pre("find", function () {
   this.populate("ratingCounts");
+  this.populate("promotion", "title description amount percentage");
 });
 
 export type promotionType = HydratedDocument<

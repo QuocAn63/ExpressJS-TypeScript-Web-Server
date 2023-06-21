@@ -35,6 +35,11 @@ export default class ProductRoute implements Routes {
       this.productController.createProduct
     );
     this.router.put(
+      "/:slug/promotion",
+      authorizationMiddleware(false, "admin"),
+      this.productController.addPromotionToProduct
+    );
+    this.router.put(
       "/:slug",
       authorizationMiddleware(false, "admin"),
       bodyValidator.productValidationRules(

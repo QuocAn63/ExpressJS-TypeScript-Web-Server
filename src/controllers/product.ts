@@ -1,11 +1,12 @@
 import { NextFunction, Response } from "express";
 import { IResponseData } from "../interfaces/response.interface";
 import { IRequestWithUser } from "../interfaces/request.interface";
-import productModel, { productType } from "../models/product";
+import productModel, { productType, promotionModel } from "../models/product";
 import { userType } from "../models/user";
 import HttpException from "../exceptions/httpException";
 import slugify from "slugify";
 import { fileType } from "../interfaces/files.interface";
+import { getPaginationString } from "../helpers";
 
 export const sortOptions = {
   value: ["asc", "desc"],
@@ -21,6 +22,7 @@ export default class ProductController {
     try {
       const { name, price, minPrice, maxPrice, date, rating, status } =
         req.query;
+      const { limit, page } = getPaginationString(req);
       const user = req.user;
       const isAuthorized = user?.roles.includes("admin");
       const query = productModel.find();
@@ -56,6 +58,8 @@ export default class ProductController {
         query.byStatus(status as "visible" | "invinsible" | "all");
 
       const fetchProductsResponse = await query
+        .limit(limit)
+        .skip(limit * (page - 1))
         .exec()
         .then((data) => this.checkUserLiked(data, user?.id));
 
@@ -198,6 +202,42 @@ export default class ProductController {
         message: "Product deleted",
         data: fetchDeleteProductResponse.id,
       });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public addPromotionToProduct = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const { slug } = req.params;
+      const { promotionId } = req.body;
+
+      const fetchPromotionResponse = await promotionModel.findById(promotionId);
+
+      if (!fetchPromotionResponse)
+        throw new HttpException(404, "Can not find promotion to add");
+
+      const fetchUpdateProductResponse = await productModel.findOneAndUpdate(
+        { slug },
+        { $set: { promotion: fetchPromotionResponse.id } }
+      );
+
+      if (!fetchUpdateProductResponse)
+        throw new HttpException(404, "Can not find product to add promotion");
+
+      return res
+        .status(200)
+        .json({
+          message: "Promotion added to product",
+          data: {
+            product: fetchUpdateProductResponse.id,
+            promotion: fetchPromotionResponse.id,
+          },
+        });
     } catch (err) {
       next(err);
     }

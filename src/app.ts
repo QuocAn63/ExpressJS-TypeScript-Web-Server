@@ -6,10 +6,10 @@ import bodyParser from "body-parser";
 import { errorHandler } from "./controllers/error";
 import mongoose from "mongoose";
 import path from "path";
-import pathToSwaggerUi from "swagger-ui-dist";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import fs from "fs";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger";
 
 export class App {
   public app: express.Application;
@@ -41,11 +41,12 @@ export class App {
   }
 
   private initializeStaticPaths() {
+    this.app.use(express.static("public"));
     this.app.use(
       "/uploads",
       express.static(path.join(__dirname, "../public/uploads"))
     );
-    this.app.use(express.static(pathToSwaggerUi.absolutePath()));
+    this.app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   }
 
   private async initializeDatabase() {

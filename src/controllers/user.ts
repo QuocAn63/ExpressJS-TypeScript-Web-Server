@@ -4,6 +4,7 @@ import { IResponseData } from "../interfaces/response.interface";
 import userModel, { userType } from "../models/user";
 import HttpException from "../exceptions/httpException";
 import { IRequestWithUser } from "../interfaces/request.interface";
+import { getPaginationString } from "../helpers";
 
 export class UserController {
   public getUsers = async (
@@ -12,8 +13,9 @@ export class UserController {
     next: NextFunction
   ) => {
     try {
-      const { username, name, date, limit } = req.query;
+      const { username, name, date } = req.query;
       const query = userModel.find();
+      const { limit, page } = getPaginationString(req);
 
       if (username && typeof username === "string") {
         query.byUserName(username);
@@ -33,9 +35,9 @@ export class UserController {
         }
       }
 
-      query.limit(
-        limit && typeof limit === "string" ? Number.parseInt(limit) : 20
-      );
+      query.limit(limit);
+
+      query.skip(limit * (page - 1));
 
       const userResponse = await query.exec();
 
@@ -52,9 +54,12 @@ export class UserController {
   ) => {
     try {
       const { username } = req.params;
+      const { limit, page } = getPaginationString(req);
 
       const fetchUserResponse = await userModel
         .findOne({ username }, { password: 0 })
+        .limit(limit)
+        .skip(limit * (page - 1))
         .exec();
 
       if (!fetchUserResponse) throw new HttpException(404, "User not found");

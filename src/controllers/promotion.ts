@@ -4,6 +4,7 @@ import { IResponseData } from "../interfaces/response.interface";
 import { sortOptions } from "./product";
 import { promotionModel, promotionType } from "../models/product";
 import HttpException from "../exceptions/httpException";
+import { getPaginationString } from "../helpers";
 
 export default class PromotionController {
   public getPromotions = async (
@@ -13,8 +14,9 @@ export default class PromotionController {
   ) => {
     try {
       const { date, type, percentage, amount, expired } = req.query;
+      const { limit, page } = getPaginationString(req);
+      console.log(limit, page);
       const query = promotionModel.find();
-
       if (date && typeof date === "string" && sortOptions.time.includes(date))
         query.sortByDate(date as "newest" | "oldest");
       if (
@@ -37,7 +39,10 @@ export default class PromotionController {
         query.sortByAmount(amount as "desc" | "asc");
       if (expired && typeof expired === "boolean") query.byStatus(expired);
 
-      const fetchPromotionResponse = await query.exec();
+      const fetchPromotionResponse = await query
+        .limit(limit)
+        .skip(limit * (page - 1))
+        .exec();
 
       return res.status(200).json({ data: fetchPromotionResponse });
     } catch (err) {

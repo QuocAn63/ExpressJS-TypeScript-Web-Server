@@ -18,6 +18,12 @@ export const promotionValidationSchemas = {
     .withMessage("Promotion percentage must be numberic")
     .isInt({ min: 1, max: 99 })
     .withMessage("Promotion percentage must between 1 and 99")
+    .custom((value, { req }) => {
+      const isValid = !req.body.amount && !!value;
+      return isValid;
+    })
+    .withMessage("Promotion type just in Percentage or Amount")
+    .optional()
     .escape()
     .bail(),
   amount: body("amount")
@@ -28,6 +34,13 @@ export const promotionValidationSchemas = {
     .withMessage("Promotion amount must be numberic")
     .isInt({ min: 1000 })
     .withMessage("Promotion amount must be greater than 1000")
+    .custom((value, { req }) => {
+      const isValid = !req.body.percentage && !!value;
+
+      return isValid;
+    })
+    .optional()
+    .withMessage("Promotion type just in Percentage or Amount")
     .escape()
     .bail(),
   description: body("description")
@@ -43,12 +56,13 @@ export const promotionValidationSchemas = {
     .isString()
     .withMessage('Promotion status must be "Invinsible" or "Visible"')
     .custom((value) => ["visible", "invisible"].includes(value))
+    .optional()
     .bail(),
 };
 
-type productValidationType = keyof typeof promotionValidationSchemas;
+type promotionValidationType = keyof typeof promotionValidationSchemas;
 
-const productValidationRules = (...keys: productValidationType[]) =>
+const promotionValidationRules = (...keys: promotionValidationType[]) =>
   keys.map((key) => promotionValidationSchemas[key]);
 
-export default productValidationRules;
+export default promotionValidationRules;
