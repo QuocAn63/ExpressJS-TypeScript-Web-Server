@@ -43,9 +43,13 @@ const authorizationMiddleware =
         const isUserAccessAuthorized = params.some((paramRole) =>
           fetchUserResponse.roles.includes(paramRole)
         );
+        const isUserDisactived = !fetchUserResponse.isActived;
 
         if (!isUserAccessAuthorized)
           return next(new HttpException(403, "Unauthorized action"));
+
+        if (isUserDisactived)
+          return next(new HttpException(403, "User disactived"));
 
         req.user = fetchUserResponse;
 

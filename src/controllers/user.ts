@@ -47,6 +47,24 @@ export class UserController {
     }
   };
 
+  public getUserProfile = async (
+    req: IRequestWithUser,
+    res: Response<IResponseData>,
+    next: NextFunction
+  ) => {
+    try {
+      const user = req.user as userType;
+
+      const fetchUserResponse = await userModel.findById(user.id, {
+        password: 0,
+      });
+
+      return res.status(200).json({ data: fetchUserResponse });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   public getUserByUsername = async (
     req: Request,
     res: Response<IResponseData>,
@@ -122,7 +140,6 @@ export class UserController {
       const avatar = req.file;
       const query = userModel.findOne({ username });
       const adminAuthorized = user.roles.includes("admin");
-      console.log(avatar);
       if (user.username !== username && !adminAuthorized)
         throw new HttpException(403, "Unauthorized action");
 

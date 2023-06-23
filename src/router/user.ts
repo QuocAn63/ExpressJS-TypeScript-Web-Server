@@ -17,6 +17,11 @@ export default class UserRoute implements Routes {
   }
 
   public initializeRoutes(): void {
+    this.router.get(
+      "/profile",
+      authorizationMiddleware(false, "user", "admin"),
+      this.userController.getUserProfile
+    );
     this.router.put(
       "/:username",
       authorizationMiddleware(false, "admin", "user"),

@@ -18,7 +18,7 @@ export default class ProductRoute implements Routes {
 
   public initializeRoutes(): void {
     this.router.post(
-      "/create",
+      "/",
       authorizationMiddleware(false, "admin"),
       bodyValidator.productValidationRules(
         "name",
@@ -34,7 +34,7 @@ export default class ProductRoute implements Routes {
       ]),
       this.productController.createProduct
     );
-    this.router.put(
+    this.router.patch(
       "/:slug/promotion",
       authorizationMiddleware(false, "admin"),
       this.productController.addPromotionToProduct
@@ -60,6 +60,11 @@ export default class ProductRoute implements Routes {
       "/:slug/like",
       authorizationMiddleware(false, "user", "admin"),
       this.productController.likeProduct
+    );
+    this.router.get(
+      "/:slug",
+      authorizationMiddleware(true, "user", "admin"),
+      this.productController.getProduct
     );
     this.router.get(
       "/",

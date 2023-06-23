@@ -9,9 +9,9 @@ const options: Options = {
       version: "1.0",
     },
     schemes: ["http"],
-    servers: [{ url: "http://localhost:3001/" }],
+    servers: [{ url: "http://localhost:3001/api/" }],
   },
-  apis: [path.join(__dirname, "../router/*.ts")],
+  apis: [path.join(__dirname, "../swagger/docs/*.ts")],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

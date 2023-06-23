@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { google } from "googleapis";
-import userModel from "../models/user";
+import userModel, { userType } from "../models/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IResponseData } from "../interfaces/response.interface";
@@ -34,30 +34,40 @@ export class AuthController {
     next: NextFunction
   ) => {
     try {
-      let userId: string;
+      let loggedInUser: userType;
 
       const { loginMethod, user } = req;
 
-      if (loginMethod && user) userId = user.id;
+      if (loginMethod && user) loggedInUser = user;
       else {
         const { username, password } = req.body;
 
         const fetchUserResponse = await userModel.findOne({ username });
 
         if (fetchUserResponse === null)
-          throw new HttpException(404, "User not found");
+          throw new HttpException(404, "Authenticate failed", [
+            { field: "username", message: "User not found" },
+          ]);
 
         const isValidPw = await bcrypt.compare(
           password,
           fetchUserResponse.password as string
         );
 
-        if (!isValidPw) throw new HttpException(401, "Password is not correct");
+        if (!isValidPw)
+          throw new HttpException(401, "Authenticate failed", [
+            { field: "password", message: "Password not match" },
+          ]);
 
-        userId = fetchUserResponse.id;
+        loggedInUser = fetchUserResponse;
       }
 
-      const { accessToken, refreshToken } = this.generateAuthTokens(userId);
+      if (!loggedInUser.isActived)
+        throw new HttpException(403, "User had been disactived");
+
+      const { accessToken, refreshToken } = this.generateAuthTokens(
+        loggedInUser.id
+      );
 
       return this.setUserSession(res, accessToken)
         .status(200)
@@ -243,6 +253,7 @@ export class AuthController {
         : await userModel.create({
             [methodString]: platformId,
             name: platformName,
+            username: platformId,
           });
 
     return { loginMethod, user: userData };

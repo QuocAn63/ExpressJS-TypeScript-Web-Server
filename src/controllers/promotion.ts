@@ -2,7 +2,7 @@ import { NextFunction, Response } from "express";
 import { IRequestWithUser } from "../interfaces/request.interface";
 import { IResponseData } from "../interfaces/response.interface";
 import { sortOptions } from "./product";
-import { promotionModel, promotionType } from "../models/product";
+import { promotionModel } from "../models/product";
 import HttpException from "../exceptions/httpException";
 import { getPaginationString } from "../helpers";
 

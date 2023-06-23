@@ -95,7 +95,7 @@ export default class ProductController {
   ) => {
     try {
       const { slug } = req.params;
-      const { name, price, stocks, status, promotion } = req.body;
+      const { name, price, stocks, status } = req.body;
       const user = req.user as userType;
       const isAuthorized = user.roles.includes("admin");
       const files = req.files as fileType;
@@ -229,15 +229,13 @@ export default class ProductController {
       if (!fetchUpdateProductResponse)
         throw new HttpException(404, "Can not find product to add promotion");
 
-      return res
-        .status(200)
-        .json({
-          message: "Promotion added to product",
-          data: {
-            product: fetchUpdateProductResponse.id,
-            promotion: fetchPromotionResponse.id,
-          },
-        });
+      return res.status(200).json({
+        message: "Promotion added to product",
+        data: {
+          product: fetchUpdateProductResponse.id,
+          promotion: fetchPromotionResponse.id,
+        },
+      });
     } catch (err) {
       next(err);
     }
