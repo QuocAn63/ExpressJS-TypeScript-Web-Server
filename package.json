@@ -2,11 +2,11 @@
   "name": "webserver-globalapi",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
+  "main": "api/index.ts",
   "scripts": {
     "tailwind:css": "postcss -w src/public/styles/tailwind.css -o src/public/styles/style.css",
     "build": "rimraf ./dist && npx tsc",
-    "start": "concurrently \"nodemon --watch ./src -e ts,ejs\""
+    "start": "nodemon --watch ./src -e ts,ejs"
   },
   "keywords": [],
   "author": "",

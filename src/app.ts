@@ -65,6 +65,7 @@ export class App {
   }
 
   private initializeRoutes(routes: Routes[]) {
+    this.app.get("/", (req, res) => res.redirect("/docs"));
     routes.forEach((route) => {
       const routePath = route.isApiPath ? `/api${route.path}` : route.path;
       this.app.use(routePath, route.router);
